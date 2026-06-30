@@ -161,21 +161,37 @@ Exemplu (pentru ITEMS = 5):
 (serve '((ana 8) (mia 2) (mara 14) (ion 7) (remove-first) (ensure 5) (remove-first))
        (list (empty-counter 1) (empty-counter 2))
        (list (empty-counter 3) (empty-counter 4)))
+       
 observăm că avem două case fast (pentru simplitate le numim C1 și C2) și două case slow (le numim C3 și C4)
+
 primele 4 cereri distribuie cei 4 clienți astfel:
+
 ana la C3 (prima casă slow cu tt=0) ⇒ C3 = (counter 3 8 8 '((ana . 8)))
+
 mia la C1 (prima casă fast cu tt=0) ⇒ C1 = (counter 1 2 2 '((mia . 2)))
+
 mara la C4 (casa slow cu tt minim) ⇒ C4 = (counter 4 14 14 '((mara . 14)))
+
 ion la C3 (casa slow cu tt minim) ⇒ C3 = (counter 3 15 8 '((ana . 8) (ion . 7)))
+
 remove-first scoate cel mai avansat client:
+
 cel mai avansat client este mia (et=2)
+
 ea este scoasă de la C1 ⇒ C1 = (counter 1 0 0 '()) (observați tt și et)
+
 ensure compară media timpilor totali cu 5:
+
 tt1 + tt2 + tt3 + tt4 = 0 + 0 + 15 + 14 = 29 ⇒ ttmed = 29 / 4 > 5
+
 se adaugă o casă slow goală (C5) ⇒ ttmed = 29 / 5 > 5
+
 se adaugă o casă slow goală (C6) ⇒ ttmed = 29 / 6 ≤ 5 (deci putem trece la cererea următoare)
+
 remove-first scoate cel mai avansat client:
+
 cel mai avansat client este ana (et=8)
+
 ea este scoasă de la C3 ⇒ C3 = (counter 3 7 7 '((ion . 7))) (observați tt și et)
 
 ---
@@ -188,32 +204,53 @@ Rezolvarea etapei începe cu implementarea TDA-ului queue în fișierul queue.rk
 Acest tip reprezintă o coadă (first-in-first-out) ca pe o structură:
 
 (define-struct queue (left right size-l size-r))
-left, right
-sunt stive (last-in-first-out, implementate ca liste Racket)
-o adăugare în coadă este o adăugare în stiva right
+
+left, right sunt stive (last-in-first-out, implementate ca liste Racket)
+
+O adăugare în coadă reprezintă o adăugare în stiva right
+
 ex adăugare:
+
 adaug 1 ⇒ right = '(1),
+
 adaug 2 ⇒ right = '(2 1)
+
 o extragere din coadă este o extragere din stiva left (când left este vidă, mutăm toate elementele din right în left, apoi extragem din left)
+
 mutarea este rezultatul unor operații pop (din right) + push (în left) repetate
+
 ex mutare:
+
 mut în left = '() din right = '(2 1) ⇒
+
 left = '(2), right = '(1) (primul pop din right îl extrage pe 2 și îi face push în left) ⇒
+
 left = '(1 2), right = '() (apoi pop din right îl extrage pe 1 și îi face push în left)
+
 ex extragere:
+
 extrag din coada cu left = '(), right = '(2 1) ⇒
+
 left = '(1 2), right = '() (după mutarea elementelor) ⇒
+
 left = '(2), right = '() (după extragerea primului element)
+
 observați că primul element adăugat este primul element extras (first-in-first-out)
-size-l, size-r
-sunt numere naturale, reprezentând numărul de elemente din cele două stive
+
+size-l, size-r sunt numere naturale, reprezentând numărul de elemente din cele două stive
+
 Sarcina voastră este să implementați interfața TDA-ului queue:
 
   empty-queue  :              -> queue  (constructor nular pentru o coadă goală)
+  
   queue-empty? :        queue -> Bool   (operator care verifică dacă o coadă este goală)
+  
   enqueue      : Elem x queue -> queue  (operatorul de adăugare în coadă)
+  
   dequeue      :        queue -> queue  (operatorul de extragere din coadă)
+  
   top          :        queue -> Elem   (operatorul de vizualizare a elementului din vârful cozii)
+  
 Această reprezentare asigură cost amortizat O(1) pentru operațiile de enqueue și dequeue. Vom folosi acest TDA pentru câmpul queue al structurii counter, optimizând reprezentarea cu liste Racket din etapele 1 și 2.
 
 După ce ați finalizat implementarea TDA-ului, continuați implementarea în fișierul etapa3.rkt.
@@ -225,9 +262,11 @@ Mai întâi, adaptați funcțiile de la etapa 2 astfel încât ele să țină co
 Funcțiile principale pe care va trebui să le implementați sunt:
 
 (pass-time-through-counter minutes)
+
 este o funcție curry (aplicată parțial pe un număr de minute, va aștepta un al doilea argument de tip counter)
-odată ce și-a primit (pe rând) argumentele, pass-time-through-counter actualizează tt-ul și et-ul casei pentru a reflecta trecerea numărului dat de minute
-câmpul queue nu se modifică, deoarece intenția este să folosim această funcție doar cu timpi mai mici sau egali cu timpul până la ieșirea primului client din coadă
+
+odată ce și-a primit (pe rând) argumentele, pass-time-through-counter actualizează tt-ul și et-ul casei pentru a reflecta trecerea numărului dat de minute câmpul queue nu se modifică, deoarece intenția este să folosim această funcție doar cu timpi mai mici sau egali cu timpul până la ieșirea primului client din coadă.
+
 Exemplu:
 
 ((pass-time-through-counter 5) 
@@ -235,34 +274,57 @@ Exemplu:
           12 
           7 
           (make-queue '() '((ada . 7)) 0 1)))
+          
 ⇒
 
 (counter 1 7 2 (queue '() '((ada . 7)) 0 1))
+
 (serve requests fast-counters slow-counters)
+
 serve actualizează casele din fast-counters și slow-counters pe măsură ce situația lor evoluează, pe baza listei requests în care elementele sunt:
+
 cereri (așezări la coadă, întârzieri, ajustări ale numărului de case)
+
 sau
+
 timpi care trec între cereri
+
 Exemplu pentru ITEMS = 5:
 
 (serve '((ana 14) (mia 2) 5 (ion 7) (delay 1 2) 7)
        (list (empty-counter 1))
        (list (empty-counter 2) (empty-counter 3)))
+       
 observăm că avem o casă fast (o numim C1) și două case slow (le numim C2 și C3)
+
 primele două cereri distribuie cei doi clienți astfel:
+
 ana la C2 ⇒ C2 = (counter 2 14 14 (queue '() '((ana . 14)) 0 1))
+
 mia la C1 ⇒ C1 = (counter 1 2 2 (queue '() '((mia . 2)) 0 1))
+
 apoi trec 5 minute, după care situația este:
+
 mia a ieșit de la C1, care a rămas goală ⇒ C1 = (counter 1 0 0 (queue '() '() 0 0))
+
 la C2 au trecut 5 minute ⇒ C2 = (counter 2 9 9 (queue '() '((ana . 14)) 0 1))
+
 C3 a rămas cum era: goală și neîntârziată ⇒ C3 = (counter 3 0 0 (queue '() '() 0 0))
+
 au părăsit magazinul, în ordine: '((1 . mia)) (1 reprezintă indexul casei de la care a ieșit mia)
+
 ion se așază la C3 ⇒ C3 = (counter 3 7 7 (queue '() '((ion . 7)) 0 1))
+
 C1 este întârziată cu 2 minute ⇒ C1 = (counter 1 2 2 (queue '() '() 0 0))
+
 apoi trec 7 minute, după care situația este:
+
 întârzierea de la C1 s-a consumat ⇒ C1 = (counter 1 0 0 (queue '() '() 0 0))
+
 la C2 au trecut 7 minute ⇒ C2 = (counter 2 2 2 (queue '() '((ana . 14)) 0 1))
+
 ion a ieșit de la C3, care a rămas goală ⇒ C3 = (counter 3 0 0 (queue '() '() 0 0))
+
 au părăsit magazinul, în ordine:: '((1 . mia) (3 . ion))
 
 ---
