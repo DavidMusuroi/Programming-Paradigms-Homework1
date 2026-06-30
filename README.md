@@ -101,23 +101,29 @@ Etapa 2 își propune exploatarea faptului că funcțiile sunt valori de ordinul
 În această etapă, numărul de case din magazin nu mai este fixat. Avem:
 
 o listă fast-counters de case care acceptă doar clienți care au cumpărat maxim ITEMS produse
+
 o listă slow-counters de case deschise tuturor clienților
+
 Pentru ca în viitor să putem determina ordinea ieșirii clienților din magazin, introducem un nou câmp în structura counter:
 
 (define-struct counter (index tt et queue))
-et
-vine de la “exit time”, și reprezintă timpul rămas până când primul client din coadă va părăsi această casă
-depinde de numărul de produse cumpărate de acest client (1 produs = 1 minut) și de eventualele întârzieri suferite de casă
+
+*et* vine de la “exit time”, și reprezintă timpul rămas până când primul client din coadă va părăsi această casă depinde de numărul de produse cumpărate de acest client (1 produs = 1 minut) și de eventualele întârzieri suferite de casă
+
 Simulatorul trebuie să modeleze atât situațiile de la etapa anterioară, cât și două noi situații:
 
 când cel mai avansat client (din punct de vedere al exit time-ului) părăsește magazinul
+
 când este necesară deschiderea unor noi case, pentru a micșora media timpilor totali de așteptare
+
 Inițial, veți adapta o serie de funcții de la etapa 1 la noua reprezentare (adică la numărul variabil de case și la prezența câmpului et în structură).
 
 Apoi, funcțiile principale pe care va trebui să le implementați sunt:
 
 (update f counters index)
+
 update aplică transformarea f casei din counters care are indexul index, și întoarce lista counters actualizată
+
 Exemplu:
 
 (update (λ (C) (struct-copy counter C [tt 0]))
@@ -126,20 +132,30 @@ Exemplu:
 ⇒
 
 (list (counter 1 2 2 '()) (counter 2 0 5 '()))
+
 (remove-first-from-counter C)
+
 remove-first-from-counter scoate prima persoană din coada casei C
+
 tt-ul și et-ul casei C trebuie ajustate în consecință
+
 orice întârziere avea casa, ea dispare
+
 dispar produsele clientului care pleacă (și minutele asociate acestora)
+
 nicio altă casă nu este afectată (este ca și cum ar fi trecut timpul doar pe la casa C; acest lucru se va schimba în etapa 3)
+
 Exemplu:
 
 (remove-first-from-counter (counter 1 50 5 '((ana . 3) (leo . 35) (mia . 10))))
 ⇒
 
 (counter 1 45 35 '((leo . 35) (mia . 10)))
+
 (serve requests fast-counters slow-counters)
+
 serve primește o listă de cereri (așezări la coadă, întârzieri, ieșiri de la casă, ajustări ale numărului de case) și le tratează în ordine, în sensul că actualizează casele din fast-counters și slow-counters pe măsură ce situația lor evoluează
+
 Exemplu (pentru ITEMS = 5):
 
 (serve '((ana 8) (mia 2) (mara 14) (ion 7) (remove-first) (ensure 5) (remove-first))
