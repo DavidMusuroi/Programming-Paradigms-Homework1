@@ -37,35 +37,60 @@ min-tt determină casa din counters care are tt minim, și întoarce perechea di
 
 ex:
 (min-tt (list (counter 1 10 '()) (counter 2 12 '((ana . 12)))))
+
 tt-ul minim este 10, la casa 1
+
 ⇒ '(1 . 10)
+
 (add-to-counter C name n-items)
+
 add-to-counter adaugă în coada casei C persoana name cu n-items produse (ceea ce se adaugă este o pereche care conține ambele informații)
+
 ex:
+
 (add-to-counter (counter 1 10 '((dan . 10))) 'ana 12)
+
 adaugă perechea '(ana . 12) la sfârșitul cozii
+
 ⇒ (counter 1 22 '((dan . 10) (ana . 12)))
+
 (serve requests C1 C2 C3 C4)
+
 serve primește o listă de cereri (așezări la coadă, respectiv întârzieri) și le tratează în ordine, în sensul că actualizează C1, C2, C3 și C4 pe măsură ce situația caselor evoluează
+
 Exemplu:
 
 (serve '((ana 12) (delay 1 5) (mia 2)) C1 C2 C3 C4)
+
 unde presupunem că C1-C4 sunt în prezent lipsite de clienți, iar ITEMS = 5:
 
 ana se așază la cea mai avantajoasă casă posibilă
+
 întrucât ana are 12 produse, ea se poate așeza doar la una dintre C2, C3, C4
+
 toate cele 3 case sunt lipsite de clienți și niciuna nu a suferit întârzieri, deci alegem C2 pentru că are index minim
+
 casa 1 suferă o întârziere de 5 minute
+
 o casă fără clienți poate suferi întârzieri - în sensul că un client care se așază acum la C1 trebuie să aștepte 5 minute până când cineva îl va lua în primire
 mia se așază la cea mai avantajoasă casă posibilă
+
 întrucât mia are 2 produse, ea se poate așeza la orice casă
+
 situația curentă a caselor este: C1 este întârziată cu 5 minute (tt = 5), la C2 stă ana (tt = 12), C3 și C4 nu au nici clienți, nici întârzieri (tt = 0)
+
 alegem C3 pentru că, dintre casele cu tt minim, C3 are index minim
+
 ⇒
+
 (list
+
  (counter 1 5 '())
+ 
  (counter 2 12 '((ana . 12)))
+ 
  (counter 3 2 '((mia . 2)))
+ 
  (counter 4 0 '()))
 
 ---
