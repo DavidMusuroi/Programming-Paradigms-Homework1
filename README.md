@@ -9,10 +9,10 @@ Tema constă într-o aplicație care simulează fluxul clienților pe la casele 
 (define-struct counter (index tt queue))
 
 *index* ,în cazul nostru, este un număr de la 1 la 4 (1 pentru C1, 2 pentru C2, etc.)
-*tt* vine de la “total time”, și reprezintă timpul total de așteptare la această casă: dacă un client se așază acum la coadă, el va avea de așteptat tt unități de timp până să ajungă în față (pentru conveniență vom considera unitatea de timp ca fiind 1 minut, chiar dacă este nerealist)
-depinde de numărul de produse cumpărate de clienții din coadă (1 produs = 1 minut) și de eventualele întârzieri suferite de casa respectivă
-*queue* este o listă de perechi (nume . nr-produse), reprezentând persoanele așezate la coadă la această casă (fiecare persoană apare în pereche cu numărul de produse cumpărate)
-ca orice coadă, funcționează pe principiul FIFO (primul element din listă corespunde primului client care s-a așezat la coadă)
+
+*tt* vine de la “total time”, și reprezintă timpul total de așteptare la această casă: dacă un client se așază acum la coadă, el va avea de așteptat tt unități de timp până să ajungă în față (pentru conveniență vom considera unitatea de timp ca fiind 1 minut, chiar dacă este nerealist) și depinde de numărul de produse cumpărate de clienții din coadă (1 produs = 1 minut) și de eventualele întârzieri suferite de casa respectivă
+
+*queue* este o listă de perechi (nume . nr-produse), reprezentând persoanele așezate la coadă la această casă (fiecare persoană apare în pereche cu numărul de produse cumpărate) și, ca orice coadă, funcționează pe principiul FIFO (primul element din listă corespunde primului client care s-a așezat la coadă)
 
 Statutul caselor diferă astfel:
 
@@ -20,15 +20,21 @@ Statutul caselor diferă astfel:
 C2-C4 sunt deschise tuturor clienților
 
 C1 acceptă doar clienți care au cumpărat maxim ITEMS produse (ITEMS este o constantă definită în schelet)
+
 În această etapă, simulatorul trebuie să modeleze două situații:
 
-când un client dorește să se așeze la coadă cu coșul său de cumpărături
-când activitatea unei case este întârziată (din diverse motive neprevăzute) cu un număr de minute
+--> când un client dorește să se așeze la coadă cu coșul său de cumpărături
+
+
+--> când activitatea unei case este întârziată (din diverse motive neprevăzute) cu un număr de minute
+
+
 Funcțiile principale pe care va trebui să le implementați sunt:
 
 (min-tt counters)
-min-tt determină casa din counters care are tt minim, și întoarce perechea dintre indexul acestei case și valoarea tt-ului ei)
-când are de ales între mai multe case, o va alege pe cea cu index minim
+
+min-tt determină casa din counters care are tt minim, și întoarce perechea dintre indexul acestei case și valoarea tt-ului ei) iar atunci când are de ales între mai multe case, o va alege pe cea cu index minim
+
 ex:
 (min-tt (list (counter 1 10 '()) (counter 2 12 '((ana . 12)))))
 tt-ul minim este 10, la casa 1
