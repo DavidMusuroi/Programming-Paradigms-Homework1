@@ -1,3 +1,5 @@
+# Detalii inițiale
+
 Tema constă într-o aplicație care simulează fluxul clienților pe la casele unui magazin, și constă în 4 etape.
 
 ## Etapa 1
