@@ -294,7 +294,8 @@ Exemplu pentru ITEMS = 5:
 (serve '((ana 14) (mia 2) 5 (ion 7) (delay 1 2) 7)
        (list (empty-counter 1))
        (list (empty-counter 2) (empty-counter 3)))
-       
+
+
 observăm că avem o casă fast (o numim C1) și două case slow (le numim C2 și C3)
 
 primele două cereri distribuie cei doi clienți astfel:
@@ -329,7 +330,7 @@ au părăsit magazinul, în ordine:: '((1 . mia) (3 . ion))
 
 ---
 
-##Etapa 4
+## Etapa 4
 
 Etapa 4 oferă un exemplu interesant de utilizare a fluxurilor. Veți reimplementa TDA-ul queue pentru a obține un plus de performanță și, cu condiția să fi respectat bariera de abstractizare în etapa 3, funcțiile implementate anterior vor funcționa fără modificări pe noua reprezentare.
 
