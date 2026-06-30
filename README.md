@@ -339,31 +339,46 @@ Din nou, rezolvarea etapei începe cu implementarea TDA-ului queue în fișierul
 Din motive de performanță detaliate în schelet, reținem câmpul left al structurii queue ca flux (în contrast cu reprezentarea ca listă din etapa 3). Definiția structurii nu se modifică:
 
 (define-struct queue (left right size-l size-r))
+
 o adăugare în coadă este o adăugare în stiva right (ca înainte)
+
 o extragere din coadă este o extragere din stiva left (ca înainte)
+
 după fiecare operație enqueue sau dequeue trebuie menținut invariantul size(left) ≥ size(right); astfel, niciun dequeue nu va găsi stiva left vidă
+
 când o operație enqueue sau dequeue produce situația size(left) = size(right) - 1, aplicăm o rotație:
+
 mutăm “în mod leneș” toate elementele din right în left
+
 ce înseamnă “leneș”: elementele vor fi mutate, de fapt, unul câte unul, pe măsură ce extragem elemente din left, nu toate deodată (dacă s-ar muta deodată nu am rezolva problema complexității, ci doar am deplasa-o asupra altor operații)
+
 Veți redefini interfața din etapa 3. Noile implementări depind de implementarea funcției de rotație:
 
 (rotate left right Acc)
+
 rotate calculează (cu evaluare întârziată) rezultatul left ++ (reverse right)
+
 rotația se efectuează doar atunci când size(left) = size(right) - 1, așadar găsește un număr echilibrat de elemente în cele două stive
+
 la fiecare extragere din left, extragem (“pop”) și un element din right pe care îl adăugăm (“push”) în acumulatorul Acc
+
 când left devine goală, right conține un singur element (size(left) = size(right) - 1), iar Acc conține toate elementele aflate inițial în right, în ordine inversă; acum adăugăm elementul din right la începutul Acc (în timp O(1)), și acesta este exact conținutul cu care trebuie să reinițializăm stiva left
+
 Exemplu:
 
 (rotate (stream-cons 1 (stream-cons 2 (stream-cons 3 empty-stream)))
         '(7 6 5 4)
         empty-stream)
+
 ⇒ #<stream>
+
 Mai precis, rezultatul este de forma:
 
 (stream-cons 1 
              (rotate (stream-cons 2 (stream-cons 3 empty-stream))
                      '(6 5 4)
                      (stream-cons 7 empty-stream)))
+
 și, conform comportamentului constructorului stream-cons, apelul recursiv al funcției rotate este întârziat. Când accesăm restul acestui flux (de exemplu, la dequeue), evaluăm apelul întârziat, obținând un rezultat de forma (stream-cons 2 (rotate ....)), etc.
 
 După ce ați finalizat implementarea TDA-ului, continuați implementarea în fișierul etapa4.rkt.
@@ -371,7 +386,9 @@ După ce ați finalizat implementarea TDA-ului, continuați implementarea în fi
 Față de etapa anterioară, simulatorul tratează două cereri noi:
 
 (close index) solicită închiderea casei cu indexul index, și redistribuirea clienților din coadă (cu excepția primului)
+
 (open index) solicită deschiderea casei cu indexul index
+
 Apare distincția între case deschise și case închise: în această etapă, cererile de tip “așezare la o casă”, respectiv “ensure” iau în considerare doar casele deschise. Modul în care reprezentați starea caselor (deschisă/închisă) este la alegerea voastră.
 
 Exemplu pentru ITEMS = 5:
@@ -379,38 +396,72 @@ Exemplu pentru ITEMS = 5:
 (serve '((ana 7) (mia 2) 5 (ion 8) (dan 6) (close 2) (delay 1 15) (ema 2) (open 2) 2 (geo 5) (close 1) (ensure 7))
        (list (empty-counter 1))
        (list (empty-counter 2) (empty-counter 3)))
+
 avem o casă fast (o numim C1) și două case slow (le numim C2 și C3)
+
 când ilustrăm starea caselor:
+
 o casă este o colecție de index, tt, et și queue (dar puteți modifica structura, dacă doriți)
+
 vizualizăm elementele fluxurilor între acolade (în loc să scriem #<stream>, ceea ce nu este tocmai informativ)
+
 primele două cereri distribuie cei doi clienți astfel:
+
 ana la C2 ⇒ C2 = (counter 2 7 7 (queue {(ana . 7)} '() 1 0))
+
 mia la C1 ⇒ C1 = (counter 1 2 2 (queue {(mia . 2)} '() 1 0))
+
 obs: în etapa trecută ana și mia apăreau ca elemente în stiva right; acum ele sunt în stiva left, deoarece s-a efectuat o rotație, necesară pentru menținerea invariantului size(left) ≥ size(right)
+
 apoi trec 5 minute, după care situația este:
+
 mia a ieșit de la C1, care a rămas goală ⇒ C1 = (counter 1 0 0 (queue {} '() 0 0))
+
 la C2 au trecut 5 minute ⇒ C2 = (counter 2 2 2 (queue {(ana . 7)} '() 1 0))
+
 C3 a rămas cum era: goală și neîntârziată ⇒ C3 = (counter 3 0 0 (queue {} '() 0 0))
+
 următoarele două cereri distribuie cei doi clienți astfel:
+
 ion la C3 ⇒ C3 = (counter 3 8 8 (queue {(ion . 8)} '() 1 0))
+
 dan la C2 ⇒ C2 = (counter 2 8 2 (queue {(ana . 7)} '((dan . 6)) 1 1))
+
 C2 se închide ⇒ ana rămâne la C2, iar dan se mută la C3
+
 ⇒ C2 = (counter 2 2 2 (queue {(ana . 7)} '() 1 0)) și nu mai primește clienți
+
 ⇒ C3 = (counter 3 14 8 (queue {(ion . 8)} '((dan . 6)) 1 1))
+
 C1 este întârziată cu 15 minute ⇒ C1 = (counter 1 15 15 (queue {} '() 0 0))
+
 ema se așază la C3 ⇒ C3 = (counter 3 16 8 (queue {(ion . 8) <flux-neevaluat-care-va-produce-dan-și-ema>} '() 3 0))
+
 C2 are tt mai mic, însă C2 este închisă, deci se alege între C1 și C3
+
 C2 se deschide, fără să producă alte modificări
+
 apoi trec 2 minute, după care situația este:
+
 întârzierea de la C1 s-a consumat parțial ⇒ C1 = (counter 1 13 13 (queue {} '() 0 0))
+
 ana a ieșit de la C2 ⇒ C2 = (counter 2 0 0 (queue {} '() 0 0))
+
 la C3 au trecut 2 minute ⇒ C3 = (counter 3 14 6 (queue {(ion . 8) <flux...>} '() 3 0))
+
 geo se așază la C2 ⇒ C2 = (counter 2 5 5 (queue {(geo . 5)} '() 1 0))
+
 C1 se închide, fără să producă alte modificări
+
 ensure compară media timpilor totali ai caselor deschise cu 7
+
 tt2 + tt3 = 5 + 14 = 19 ⇒ tt-mediu = 19 / 2 > 7
+
 tt1 nu participă la medie întrucât C1 este închisă
+
 se adaugă o casă slow goală (C4) ⇒ tt-mediu = 19 / 3 ≤ 7 (deci ne oprim aici cu adăugarea)
+
+
 Rezultat final:
 
 (list
